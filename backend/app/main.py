@@ -77,3 +77,4 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     for r in (auth.router, admin.router, cases.router, documents.router):
         app.include_router(r)
     return app
+app = create_app()
