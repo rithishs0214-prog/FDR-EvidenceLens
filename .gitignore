@@ -1,0 +1,23 @@
+# environments / secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+# local data: database and uploaded documents (may contain sensitive files)
+backend/data/
+*.db
+*.sqlite3
+uploads/
+# node
+node_modules/
+frontend/dist/
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
