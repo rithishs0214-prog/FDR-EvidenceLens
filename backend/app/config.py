@@ -21,7 +21,7 @@ def _bool(name: str, default: bool) -> bool:
 class Settings:
     app_env: str = "development"
     database_url: str = f"sqlite:///{(BACKEND_DIR / 'data' / 'evidencelens.db').as_posix()}"
-    upload_dir: Path = BACKEND_DIR / "data" / "uploads"
+    upload_dir: Path = Path("/tmp/evidencelens/uploads")
     max_upload_mb: int = 10
     max_pdf_pages: int = 10
     cors_origins: tuple = ("http://localhost:5173", "http://127.0.0.1:5173")
