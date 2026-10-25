@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from typing import Optional
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -31,6 +32,9 @@ class Settings:
     approaching_maturity_days: int = 30
     enable_demo_endpoints: bool = True
     session_hours: int = 8
+    cookie_secure: Optional[bool] = None      # None = automatic (Secure unless APP_ENV=development)
+    cookie_samesite: str = "lax"              # "lax" (same-site / proxied) or "none" (cross-site; forces Secure)
+    allow_demo_in_production: bool = False    # lets Settings -> Load demo cases work on a deployed demo
 
     @property
     def max_upload_bytes(self) -> int:
@@ -39,11 +43,19 @@ class Settings:
     @property
     def demo_allowed(self) -> bool:
         """Demo seeding/reset is development-only and can be switched off explicitly."""
-        return self.app_env == "development" and self.enable_demo_endpoints
+        return self.enable_demo_endpoints and (self.app_env == "development" or self.allow_demo_in_production)
+
+    @property
+    def secure_cookies(self) -> bool:
+        if self.cookie_samesite == "none":
+            return True   # browsers reject SameSite=None cookies that are not Secure
+        return self.cookie_secure if self.cookie_secure is not None else self.app_env != "development"
 
 
 def load_settings() -> Settings:
     d = Settings()
+    samesite = os.getenv("COOKIE_SAMESITE", d.cookie_samesite).strip().lower()
+    samesite = samesite if samesite in ("lax", "none") else "lax"
     return Settings(
         app_env=os.getenv("APP_ENV", d.app_env),
         database_url=os.getenv("DATABASE_URL", d.database_url),
@@ -57,4 +69,7 @@ def load_settings() -> Settings:
         approaching_maturity_days=int(os.getenv("APPROACHING_MATURITY_DAYS", d.approaching_maturity_days)),
         enable_demo_endpoints=_bool("ENABLE_DEMO_ENDPOINTS", d.enable_demo_endpoints),
         session_hours=int(os.getenv("SESSION_HOURS", d.session_hours)),
+        cookie_secure=(_bool("COOKIE_SECURE", True) if os.getenv("COOKIE_SECURE") else None),
+        cookie_samesite=samesite,
+        allow_demo_in_production=_bool("ALLOW_DEMO_IN_PRODUCTION", d.allow_demo_in_production),
     )

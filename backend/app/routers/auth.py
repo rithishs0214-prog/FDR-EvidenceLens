@@ -51,7 +51,7 @@ def login(body: LoginIn, request: Request, response: Response, db: Session = Dep
     services.audit(db, None, "login_success", {}, actor=user.username, case_code="-")
     db.commit()
     response.set_cookie(SESSION_COOKIE, token, max_age=settings.session_hours * 3600, httponly=True,
-                        samesite="lax", secure=settings.app_env != "development", path="/")
+                        samesite=settings.cookie_samesite, secure=settings.secure_cookies, path="/")
     return UserOut(username=user.username, display_name=user.display_name)
 
 

@@ -6,14 +6,20 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from .core.dburl import normalize_database_url
+
 
 def make_engine(url: str) -> Engine:
+    url = normalize_database_url(url)
     is_sqlite = url.startswith("sqlite")
     if is_sqlite and ":memory:" not in url:
         path = url.replace("sqlite:///", "", 1)
         if path:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
-    engine = create_engine(url, connect_args={"check_same_thread": False} if is_sqlite else {})
+    if is_sqlite:
+        engine = create_engine(url, connect_args={"check_same_thread": False})
+    else:  # hosted Postgres: drop dead connections instead of failing the next request
+        engine = create_engine(url, pool_pre_ping=True, pool_recycle=300)
     if is_sqlite:
         @event.listens_for(engine, "connect")
         def _pragmas(dbapi_conn, _):  # enforce foreign keys (off by default in SQLite)

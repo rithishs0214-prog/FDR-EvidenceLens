@@ -1,4 +1,7 @@
-export const API_BASE: string = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://127.0.0.1:8000";
+// VITE_API_BASE_URL: a full URL (local dev: http://127.0.0.1:8000), or "/" to call the same origin that serves the
+// site (used on Vercel together with the /api rewrite in vercel.json, so the login cookie is first-party).
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined;
+export const API_BASE: string = RAW_BASE === undefined ? "http://127.0.0.1:8000" : RAW_BASE.trim().replace(/\/+$/, "");
 
 export class ApiClientError extends Error {
   status: number;
@@ -25,7 +28,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(`${API_BASE}${path}`, { ...init, headers, credentials: "include" });
   } catch {
-    throw new ApiClientError(`Cannot reach the backend at ${API_BASE}. Is it running?`, 0, "network_error");
+    throw new ApiClientError(`Cannot reach the backend${API_BASE ? ` at ${API_BASE}` : ""}. It may be starting up (wait a minute and retry) or not running.`, 0, "network_error");
   }
   if (!res.ok) {
     if (res.status === 401 && !path.startsWith("/api/auth/")) window.dispatchEvent(new Event("auth:expired"));
@@ -53,7 +56,7 @@ export function uploadDocument<T>(caseId: number, file: File, docType: string, o
     xhr.open("POST", `${API_BASE}/api/cases/${caseId}/documents`);
     xhr.withCredentials = true;
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
-    xhr.onerror = () => reject(new ApiClientError(`Cannot reach the backend at ${API_BASE}. Is it running?`, 0, "network_error"));
+    xhr.onerror = () => reject(new ApiClientError(`Cannot reach the backend${API_BASE ? ` at ${API_BASE}` : ""}. It may be starting up (wait a minute and retry) or not running.`, 0, "network_error"));
     xhr.onload = () => {
       let body: any = null;
       try { body = JSON.parse(xhr.responseText); } catch { /* ignore */ }

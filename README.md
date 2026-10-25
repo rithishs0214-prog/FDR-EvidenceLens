@@ -189,6 +189,11 @@ retention/deletion policy, malware scanning of uploads, a real task queue, datab
 production database, rate limiting, security review and penetration test, data-protection assessment, and
 requirements confirmed with the actual process owners. See `docs/security-and-privacy.md`.
 
+## 13b. Deploying online
+
+See `docs/DEPLOYMENT.md` (Neon Postgres + Render Docker backend + Vercel frontend with an `/api` rewrite). Vercel serverless
+alone cannot host this backend (read-only disk, no Tesseract). The deployment guide is **untested**.
+
 ## 14. Future improvements
 
 Authorised bank-verification integration (if ever permitted), configurable extraction templates per bank, side-by-side

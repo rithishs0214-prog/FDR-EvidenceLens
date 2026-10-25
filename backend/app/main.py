@@ -70,9 +70,15 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             f"{d['field']}: {d['message']}" if d["field"] else d["message"] for d in details), details)
 
     @app.exception_handler(Exception)
-    async def _unexpected(_: Request, exc: Exception):
+    async def _unexpected(request: Request, exc: Exception):
         log.error("Unhandled error: %s", type(exc).__name__)   # no stack trace or data to the client
-        return _err(500, "internal_error", "Something went wrong. Please try again.")
+        resp = _err(500, "internal_error", "Something went wrong. Please try again.")
+        origin = request.headers.get("origin")
+        if origin and origin in settings.cors_origins:   # this response bypasses CORSMiddleware
+            resp.headers["Access-Control-Allow-Origin"] = origin
+            resp.headers["Access-Control-Allow-Credentials"] = "true"
+            resp.headers["Vary"] = "Origin"
+        return resp
 
     for r in (auth.router, admin.router, cases.router, documents.router):
         app.include_router(r)
