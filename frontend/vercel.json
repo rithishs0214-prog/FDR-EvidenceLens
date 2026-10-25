@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://REPLACE-WITH-YOUR-BACKEND.onrender.com/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://fdr-evidencelens.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
